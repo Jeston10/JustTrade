@@ -9,14 +9,19 @@ export const getAuth = async () => {
     if(authInstance) return authInstance;
 
     const mongoose = await connectToDatabase();
+    
+    if(!mongoose) {
+        throw new Error('MongoDB connection not available');
+    }
+
     const db = mongoose.connection.db;
 
     if(!db) throw new Error('MongoDB connection not found');
 
     authInstance = betterAuth({
         database: mongodbAdapter(db as any),
-        secret: process.env.BETTER_AUTH_SECRET,
-        baseURL: process.env.BETTER_AUTH_URL,
+        secret: process.env.BETTER_AUTH_SECRET || 'fallback-secret-key',
+        baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000',
         emailAndPassword: {
             enabled: true,
             disableSignUp: false,

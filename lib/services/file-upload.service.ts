@@ -35,10 +35,21 @@ export class FileUploadService {
   // Initialize upload directory
   static async initializeUploadDir(): Promise<void> {
     try {
+      // Skip directory creation during build time
+      if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+        console.log('Skipping upload directory initialization during build');
+        return;
+      }
+      
       await fs.mkdir(this.uploadDir, { recursive: true });
       console.log('Upload directory initialized:', this.uploadDir);
     } catch (error) {
       console.error('Error creating upload directory:', error);
+      // Don't throw error during build time
+      if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+        console.log('Continuing without upload directory during build');
+        return;
+      }
       throw error;
     }
   }

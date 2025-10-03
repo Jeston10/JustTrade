@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

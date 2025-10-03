@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
     }
 
     const mongoose = await connectToDatabase();
+    
+    if (!mongoose) {
+      return NextResponse.json({ error: 'Database not available' }, { status: 503 });
+    }
+
     const db = mongoose.connection.db;
     if (!db) throw new Error('MongoDB connection not found');
 
@@ -70,6 +75,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     const mongoose = await connectToDatabase();
+    
+    if (!mongoose) {
+      return NextResponse.json({ error: 'Database not available' }, { status: 503 });
+    }
+
     const db = mongoose.connection.db;
     if (!db) throw new Error('MongoDB connection not found');
 

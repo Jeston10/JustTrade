@@ -2,10 +2,26 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
-      ignoreDuringBuilds: true,
-  }, typescript: {
-      ignoreBuildErrors: true
-    }
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['mongoose'],
+  },
+  images: {
+    domains: ['finnhub.io', 'localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
 };
 
 export default nextConfig;

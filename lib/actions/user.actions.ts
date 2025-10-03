@@ -5,6 +5,12 @@ import {connectToDatabase} from "@/database/mongoose";
 export const getAllUsersForNewsEmail = async () => {
     try {
         const mongoose = await connectToDatabase();
+        
+        if(!mongoose) {
+            console.warn('Database not available, returning empty users list');
+            return [];
+        }
+
         const db = mongoose.connection.db;
         if(!db) throw new Error('Mongoose connection not connected');
 

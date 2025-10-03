@@ -7,8 +7,8 @@ import nodemailer from 'nodemailer';
 const sesClient = new SESClient({
   region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'fallback-key',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'fallback-secret',
   },
 });
 
@@ -16,23 +16,23 @@ const sesClient = new SESClient({
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'fallback-key',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'fallback-secret',
   },
 });
 
 // Twilio Configuration
 const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID || '',
-  process.env.TWILIO_AUTH_TOKEN || ''
+  process.env.TWILIO_ACCOUNT_SID || 'fallback-sid',
+  process.env.TWILIO_AUTH_TOKEN || 'fallback-token'
 );
 
 // Nodemailer Configuration (backup email service)
-const emailTransporter = nodemailer.createTransporter({
+const emailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_APP_PASSWORD || '',
+    user: process.env.EMAIL_USER || 'fallback@example.com',
+    pass: process.env.EMAIL_APP_PASSWORD || 'fallback-password',
   },
 });
 

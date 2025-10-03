@@ -8,6 +8,12 @@ export async function getWatchlistSymbolsByEmail(email: string): Promise<string[
 
   try {
     const mongoose = await connectToDatabase();
+    
+    if (!mongoose) {
+      console.warn('Database not available, returning empty watchlist');
+      return [];
+    }
+
     const db = mongoose.connection.db;
     if (!db) throw new Error('MongoDB connection not found');
 
@@ -32,6 +38,12 @@ export async function getUserWatchlist(email: string): Promise<WatchlistItem[]> 
 
   try {
     const mongoose = await connectToDatabase();
+    
+    if (!mongoose) {
+      console.warn('Database not available, returning empty watchlist');
+      return [];
+    }
+
     const db = mongoose.connection.db;
     if (!db) throw new Error('MongoDB connection not found');
 
@@ -58,6 +70,11 @@ export async function addToWatchlist(email: string, symbol: string, company: str
 
   try {
     const mongoose = await connectToDatabase();
+    
+    if (!mongoose) {
+      return { success: false, message: 'Database not available' };
+    }
+
     const db = mongoose.connection.db;
     if (!db) throw new Error('MongoDB connection not found');
 
