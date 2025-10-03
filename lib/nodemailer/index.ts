@@ -1,15 +1,22 @@
 import nodemailer from 'nodemailer';
 import {WELCOME_EMAIL_TEMPLATE, NEWS_SUMMARY_EMAIL_TEMPLATE} from "@/lib/nodemailer/templates";
 
-export const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.NODEMAILER_EMAIL!,
-        pass: process.env.NODEMAILER_PASSWORD!,
-    }
-})
+export const transporter = process.env.NODEMAILER_EMAIL && process.env.NODEMAILER_PASSWORD
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.NODEMAILER_EMAIL,
+            pass: process.env.NODEMAILER_PASSWORD,
+        }
+    })
+    : null;
 
 export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData) => {
+    if (!transporter) {
+        console.warn('Email transporter not configured - welcome email not sent');
+        return;
+    }
+
     const htmlTemplate = WELCOME_EMAIL_TEMPLATE
         .replace('{{name}}', name)
         .replace('{{intro}}', intro);
@@ -28,6 +35,11 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
 export const sendNewsSummaryEmail = async (
     { email, date, newsContent }: { email: string; date: string; newsContent: string }
 ): Promise<void> => {
+    if (!transporter) {
+        console.warn('Email transporter not configured - news summary email not sent');
+        return;
+    }
+
     const htmlTemplate = NEWS_SUMMARY_EMAIL_TEMPLATE
         .replace('{{date}}', date)
         .replace('{{newsContent}}', newsContent);

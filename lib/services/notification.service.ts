@@ -3,38 +3,43 @@ import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import twilio from 'twilio';
 import nodemailer from 'nodemailer';
 
-// AWS SES Configuration
-const sesClient = new SESClient({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'fallback-key',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'fallback-secret',
-  },
-});
+// AWS SES Configuration - only initialize if valid credentials are provided
+const sesClient = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  ? new SESClient({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    })
+  : null;
 
-// AWS SNS Configuration
-const snsClient = new SNSClient({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'fallback-key',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'fallback-secret',
-  },
-});
+// AWS SNS Configuration - only initialize if valid credentials are provided
+const snsClient = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  ? new SNSClient({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    })
+  : null;
 
-// Twilio Configuration
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID || 'fallback-sid',
-  process.env.TWILIO_AUTH_TOKEN || 'fallback-token'
-);
+// Twilio Configuration - only initialize if valid credentials are provided
+const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_ACCOUNT_SID.startsWith('AC') && process.env.TWILIO_AUTH_TOKEN
+  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  : null;
 
-// Nodemailer Configuration (backup email service)
-const emailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'fallback@example.com',
-    pass: process.env.EMAIL_APP_PASSWORD || 'fallback-password',
-  },
-});
+// Nodemailer Configuration (backup email service) - only initialize if valid credentials are provided
+const emailTransporter = process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_APP_PASSWORD,
+      },
+    })
+  : null;
 
 export interface NotificationData {
   to: string;
@@ -116,58 +121,59 @@ export class NotificationService {
   // Send Email via AWS SES
   static async sendEmail(data: NotificationData): Promise<boolean> {
     try {
-      const templates = this.getEmailTemplates();
-      let template = templates.profileUpdate;
-      
-      // Select template based on type
-      if (data.type === 'email' && data.metadata?.template) {
-        template = templates[data.metadata.template as keyof typeof templates] || templates.profileUpdate;
-      }
+      // Try AWS SES first if available
+      if (sesClient) {
+        const templates = this.getEmailTemplates();
+        let template = templates.profileUpdate;
+        
+        // Select template based on type
+        if (data.type === 'email' && data.metadata?.template) {
+          template = templates[data.metadata.template as keyof typeof templates] || templates.profileUpdate;
+        }
 
-      // Replace template variables
-      let html = template.html;
-      let text = template.text;
-      let subject = template.subject;
+        // Replace template variables
+        let html = template.html;
+        let text = template.text;
+        let subject = template.subject;
 
-      if (data.metadata) {
-        Object.entries(data.metadata).forEach(([key, value]) => {
-          const regex = new RegExp(`{{${key}}}`, 'g');
-          html = html.replace(regex, String(value));
-          text = text.replace(regex, String(value));
-          subject = subject.replace(regex, String(value));
+        if (data.metadata) {
+          Object.entries(data.metadata).forEach(([key, value]) => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            html = html.replace(regex, String(value));
+            text = text.replace(regex, String(value));
+            subject = subject.replace(regex, String(value));
+          });
+        }
+
+        const command = new SendEmailCommand({
+          Source: process.env.FROM_EMAIL || 'noreply@justtrade.app',
+          Destination: {
+            ToAddresses: [data.to],
+          },
+          Message: {
+            Subject: {
+              Data: subject,
+              Charset: 'UTF-8',
+            },
+            Body: {
+              Html: {
+                Data: html,
+                Charset: 'UTF-8',
+              },
+              Text: {
+                Data: text,
+                Charset: 'UTF-8',
+              },
+            },
+          },
         });
+
+        await sesClient.send(command);
+        return true;
       }
-
-      const command = new SendEmailCommand({
-        Source: process.env.FROM_EMAIL || 'noreply@justtrade.app',
-        Destination: {
-          ToAddresses: [data.to],
-        },
-        Message: {
-          Subject: {
-            Data: subject,
-            Charset: 'UTF-8',
-          },
-          Body: {
-            Html: {
-              Data: html,
-              Charset: 'UTF-8',
-            },
-            Text: {
-              Data: text,
-              Charset: 'UTF-8',
-            },
-          },
-        },
-      });
-
-      await sesClient.send(command);
-      return true;
-    } catch (error) {
-      console.error('AWS SES Error:', error);
       
-      // Fallback to Nodemailer
-      try {
+      // Fallback to Nodemailer if available
+      if (emailTransporter) {
         await emailTransporter.sendMail({
           from: process.env.FROM_EMAIL || 'noreply@justtrade.app',
           to: data.to,
@@ -175,16 +181,24 @@ export class NotificationService {
           html: data.message,
         });
         return true;
-      } catch (fallbackError) {
-        console.error('Nodemailer Fallback Error:', fallbackError);
-        return false;
       }
+      
+      console.warn('No email service configured - email sending disabled');
+      return false;
+    } catch (error) {
+      console.error('Email sending error:', error);
+      return false;
     }
   }
 
   // Send SMS via Twilio
   static async sendSMS(data: NotificationData): Promise<boolean> {
     try {
+      if (!twilioClient) {
+        console.warn('Twilio client not initialized - SMS sending disabled');
+        return false;
+      }
+
       await twilioClient.messages.create({
         body: data.message,
         from: process.env.TWILIO_PHONE_NUMBER || '',
@@ -200,8 +214,13 @@ export class NotificationService {
   // Send Push Notification via AWS SNS
   static async sendPushNotification(data: NotificationData): Promise<boolean> {
     try {
+      if (!snsClient || !process.env.SNS_TOPIC_ARN) {
+        console.warn('AWS SNS not configured - push notification sending disabled');
+        return false;
+      }
+
       const command = new PublishCommand({
-        TopicArn: process.env.SNS_TOPIC_ARN || '',
+        TopicArn: process.env.SNS_TOPIC_ARN,
         Message: JSON.stringify({
           default: data.message,
           GCM: JSON.stringify({
