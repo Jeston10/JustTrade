@@ -1,0 +1,186 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+*.lcov
+
+# Next.js
+/.next/
+/out/
+.next/
+.swc/
+
+# Production builds
+/build
+/dist
+
+# Environment variables (CRITICAL - contains sensitive data)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+/database/data/
+/database/backups/
+/mongodb-data/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS and cloud service files
+.aws/
+*.pem
+*.key
+*.crt
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo
+
+# Sentry
+.sentryclirc
+
+# Uploads and user-generated content
+/uploads/
+/public/uploads/
+/static/uploads/
+/user-uploads/
+/temp-uploads/
+
+# Trading data and cache
+/trading-data/
+/market-cache/
+/price-cache/
+*.json.backup
+
+# API keys and secrets
+secrets.json
+config/secrets.json
+*.secret
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Local development
+.local
+.local.*
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Miscellaneous
+*.tgz
+*.tar.gz
